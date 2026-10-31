@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,11 +26,11 @@ namespace Tooling_WH_Sytems.DataSource
             InitializeComponent();
             LoadControl();
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
             LockControl();
@@ -37,14 +38,14 @@ namespace Tooling_WH_Sytems.DataSource
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = DataSorceDAO.Instance.GetListReason();
         }
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             btnAdd.Enabled = true;
             btnEdit.Enabled = true;
@@ -56,7 +57,7 @@ namespace Tooling_WH_Sytems.DataSource
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             btnAdd.Enabled = false;
             btnEdit.Enabled = false;
@@ -68,7 +69,7 @@ namespace Tooling_WH_Sytems.DataSource
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtName.Text = String.Empty;
             lblId.Text = String.Empty;
@@ -76,15 +77,16 @@ namespace Tooling_WH_Sytems.DataSource
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
                 txtName.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["RName"]).ToString();
                 lblId.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Id"]).ToString();
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("frmReason", ex);
             }
         }
         /// <summary>
@@ -93,13 +95,12 @@ namespace Tooling_WH_Sytems.DataSource
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             OpenControl();
-            Isinsert = true;
+            _isInsert = true;
             ClearText();
         }
 
@@ -109,9 +110,8 @@ namespace Tooling_WH_Sytems.DataSource
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn muốn xóa thông tin này?".ToUpper(), "Thông Báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -131,13 +131,12 @@ namespace Tooling_WH_Sytems.DataSource
         private void btnEdit_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             OpenControl();
-            Isinsert = false;
+            _isInsert = false;
 
         }
 
@@ -148,7 +147,7 @@ namespace Tooling_WH_Sytems.DataSource
         {
             string name = txtName.Text;
             int id = DataSorceDAO.Instance.IdReason(name);
-            if (Isinsert == true)
+            if (_isInsert == true)
             {
                 if (id == -1)
                 {

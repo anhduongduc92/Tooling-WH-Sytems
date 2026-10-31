@@ -1,0 +1,67 @@
+﻿KẾT QUẢ KIỂM TRA TĨNH
+=====================
+Số file bản trước còn được giữ: 560
+Số file thay đổi so với bản comment/async trước: 44
+Số file mới: 6
+Cú pháp C#: không phát hiện lỗi.
+Các mục khai báo csproj: không thiếu file, không trùng Compile.
+File Designer, resx và solution: giữ nguyên.
+Chuỗi truy vấn SQL ở DAO: giữ nguyên.
+Thứ tự lời gọi DAO trong các hàm nghiệp vụ cũ: giữ nguyên.
+Ngưỡng kiểm tra quyền: giữ nguyên.
+Kiểm tra phạm vi biến hộp thoại dùng using: đạt.
+Chưa build/chạy thử: cần Windows, .NET Framework và DevExpress.
+
+FILE THAY ĐỔI:
+HUONG_DAN_BAN_CHINH_SUA.txt
+Tooling WH Sytems/frmLogin.cs
+Tooling WH Sytems/frmMain.cs
+Tooling WH Sytems/frmInventory.cs
+Tooling WH Sytems/Tooling WH Sytems.csproj
+Tooling WH Sytems/frmErrorList.cs
+Tooling WH Sytems/frmEmployessCode.cs
+Tooling WH Sytems/frmInvenSpecPart.cs
+DAO/DataProvider.cs
+Tooling WH Sytems/Backup/frmBackup.cs
+Tooling WH Sytems/Order/frmNewInportOrder.cs
+Tooling WH Sytems/Order/frmInputOrderDetail.cs
+Tooling WH Sytems/Order/frmNewOrder.cs
+Tooling WH Sytems/Order/frmViewNewOrderDetail.cs
+Tooling WH Sytems/Order/frmViewOrderDetail.cs
+Tooling WH Sytems/Order/frmOrderDetailLocal.cs
+Tooling WH Sytems/Order/frmOrderList.cs
+Tooling WH Sytems/Order/frmNewOrderDetail.cs
+Tooling WH Sytems/Order/frmTheFirtOrderDetail.cs
+Tooling WH Sytems/Order/frmOrderDetail.cs
+Tooling WH Sytems/User/frmUserDetail.cs
+Tooling WH Sytems/User/frmUsers.cs
+Tooling WH Sytems/User/frmUserGroup.cs
+Tooling WH Sytems/DataSource/frmReason.cs
+Tooling WH Sytems/DataSource/frmPurPose.cs
+Tooling WH Sytems/Supplier/frmFormSupplier.cs
+Tooling WH Sytems/Supplier/frmSupplier.cs
+Tooling WH Sytems/Supplier/frmImportSupplier.cs
+Tooling WH Sytems/Employess/frmImportEmployess.cs
+Tooling WH Sytems/Employess/frmEmployess.cs
+Tooling WH Sytems/Employess/frmFormEmployess.cs
+Tooling WH Sytems/Part/frmImportPart.cs
+Tooling WH Sytems/Part/frmPart.cs
+Tooling WH Sytems/Part/frmFormPart.cs
+Tooling WH Sytems/Input/frmInputSpecPart.cs
+Tooling WH Sytems/Input/frmInputExcel.cs
+Tooling WH Sytems/Input/frmInput.cs
+Tooling WH Sytems/Input/frmInputLocal.cs
+Tooling WH Sytems/Input/frmStatisticInput.cs
+Tooling WH Sytems/Input/frmFormInput.cs
+Tooling WH Sytems/Output/frmOutput.cs
+Tooling WH Sytems/Output/frmStatisticOutput.cs
+Tooling WH Sytems/Output/frmReasonError.cs
+Tooling WH Sytems/Permission/frmPermission.cs
+
+FILE MỚI:
+Tooling WH Sytems/Infrastructure/BusyFormScope.cs
+Tooling WH Sytems/Infrastructure/UiActions.cs
+Tooling WH Sytems/Infrastructure/GridExportService.cs
+Tooling WH Sytems/Infrastructure/AppLog.cs
+Tooling WH Sytems/Infrastructure/ExcelWorkbookReader.cs
+Tooling WH Sytems/bin/Debug/.DevExpress.Printing.v19.1.Core.dll.vxe5Ws

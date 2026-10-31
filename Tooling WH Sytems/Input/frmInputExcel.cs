@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,48 +26,46 @@ namespace Tooling_WH_Sytems.Input
         public frmInputExcel()
         {
             InitializeComponent();
+            Disposed += DisposeWorkbook;
         }
-        List<string> eRror = new List<string>();
-        DataSet ds;
-        int dk = 0;
+        private List<string> _errors = new List<string>();
+        private DataSet _workbook;
+        private bool _hasSelectedSheet;
         public EventHandler eventHandler;
         /// <summary>
         /// Chọn tệp Excel, đọc các sheet và nạp danh sách tên sheet.
         /// </summary>
-        void ReadData()
+        private async Task ReadDataAsync()
         {
-            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Excel Workbook|*.xlsx|Excel Workbook 97-2003|*.xls", ValidateNames = true })
+            using (OpenFileDialog dialog = new OpenFileDialog
             {
-                if (ofd.ShowDialog() == DialogResult.OK)
+                Filter = "Excel Workbook|*.xlsx|Excel Workbook 97-2003|*.xls",
+                ValidateNames = true
+            })
+            {
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+                string fileName = dialog.FileName;
+                bool isBinary = dialog.FilterIndex == 2;
+                using (new BusyFormScope(this))
                 {
-                    lblLink.Text = ofd.FileName;
-                    using (var stream = File.Open(ofd.FileName, FileMode.Open, FileAccess.Read))
+                    DataSet workbook = await Task.Run(() => ExcelWorkbookReader.Read(fileName, isBinary));
+                    if (IsDisposed)
                     {
-                        IExcelDataReader reader;
-                        if (ofd.FilterIndex == 2)
-                        {
-                            reader = ExcelReaderFactory.CreateBinaryReader(stream);
-                        }
-                        else
-                        {
-                            reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-                        }
+                        workbook.Dispose();
+                        return;
+                    }
 
-                        ds = reader.AsDataSet(new ExcelDataSetConfiguration()
-                        {
-                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
-                            {
-                                UseHeaderRow = true
-                            }
-                        });
-
-                        cbSheet.Items.Clear();
-                        foreach (DataTable dt in ds.Tables)
-                        {
-                            cbSheet.Items.Add(dt.TableName);
-                        }
-                        reader.Close();
-
+                    // Chỉ thay dữ liệu hiện tại sau khi tệp mới đã đọc thành công.
+                    DataSet previousWorkbook = _workbook;
+                    _hasSelectedSheet = false;
+                    GCData.DataSource = null;
+                    cbSheet.Items.Clear();
+                    _workbook = workbook;
+                    if (previousWorkbook != null) previousWorkbook.Dispose();
+                    lblLink.Text = fileName;
+                    foreach (DataTable sheet in workbook.Tables)
+                    {
+                        cbSheet.Items.Add(sheet.TableName);
                     }
                 }
             }
@@ -74,16 +73,29 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Chọn và đọc tệp Excel để chuẩn bị nhập dữ liệu.
         /// </summary>
-        private void btnOpen_Click(object sender, EventArgs e)
+        private async void btnOpen_Click(object sender, EventArgs e)
         {
-            ReadData();
+            if (_isReadingWorkbook) return;
+            _isReadingWorkbook = true;
+            try
+            {
+                await ReadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                UiActions.ShowError("Không thể đọc tệp Excel", ex);
+            }
+            finally
+            {
+                _isReadingWorkbook = false;
+            }
         }
         /// <summary>
         /// Kiểm tra từng dòng Excel và ghi nhận các dòng nhập kho hợp lệ.
         /// </summary>
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (dk == 0)
+            if (!_hasSelectedSheet)
             {
                 XtraMessageBox.Show("bạn chưa chọn sheet cần thêm!".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -91,7 +103,7 @@ namespace Tooling_WH_Sytems.Input
             string employess = Kun_Static.EmployessCode;
             DateTime dateIn = DateTime.Now;
             lblError.Text = "";
-            eRror = new List<string>();
+            _errors = new List<string>();
             int i = 0;
             int slLoi = 0;
             string partCode = "";
@@ -101,6 +113,7 @@ namespace Tooling_WH_Sytems.Input
 
             foreach (DataGridViewRow row in GCData.Rows)
             {
+                if (row.IsNewRow) continue;
                 i++;
                 try
                 {
@@ -111,24 +124,25 @@ namespace Tooling_WH_Sytems.Input
                     {
                         quantity = (float)Convert.ToDouble(row.Cells["Quantity"].Value.ToString());
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        AppLog.Write("Đọc số lượng nhập Excel, dòng " + i, ex);
+                        quantity = 0;
                     }
                     int testSup = SupplierDAO.Instance.IdSupplier(supplier);
                     if (partCode == "")
                     {
-                        eRror.Add("Dòng " + i + ": Mã linh kiện Trống".ToUpper());
+                        _errors.Add("Dòng " + i + ": Mã linh kiện Trống".ToUpper());
                         slLoi++;
                     }
                     else if (quantity <= 0)
                     {
-                        eRror.Add("Dòng " + i + ": bạn chưa điền số lượng nhập".ToUpper());
+                        _errors.Add("Dòng " + i + ": bạn chưa điền số lượng nhập".ToUpper());
                         slLoi++;
                     }
                     else if (testSup == -1)
                     {
-                        eRror.Add("Dòng " + i + ": mã nhà cung cấp không chính xác".ToUpper());
+                        _errors.Add("Dòng " + i + ": mã nhà cung cấp không chính xác".ToUpper());
                         slLoi++;
                     }
                     else
@@ -140,19 +154,21 @@ namespace Tooling_WH_Sytems.Input
                         }
                         else
                         {
-                            eRror.Add("Dòng " + i + ": Mã linh kiện không tồn tại".ToUpper());
+                            _errors.Add("Dòng " + i + ": Mã linh kiện không tồn tại".ToUpper());
                             slLoi++;
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                   
+                    AppLog.Write("frmInputExcel: nhập dòng " + i, ex);
+                    _errors.Add("Dòng " + i + ": Dữ liệu không hợp lệ hoặc không thể ghi dữ liệu.");
+                    slLoi++;
                 }
                 lblError.Text = "Lỗi: " + (slLoi) + " Lỗi";
             }
 
-            if (eRror.Count == 0)
+            if (_errors.Count == 0)
             {
                 XtraMessageBox.Show("Nhập Dữ Liệu Xong".ToUpper());
                 Kun_Static.CheckAction = 1;
@@ -168,16 +184,20 @@ namespace Tooling_WH_Sytems.Input
         /// </summary>
         private void btnErrorList_Click(object sender, EventArgs e)
         {
-            frmErrorList f = new frmErrorList(eRror);
-            f.ShowDialog();
+            using (frmErrorList f = new frmErrorList(_errors))
+            {
+                f.ShowDialog();
+            }
         }
         /// <summary>
         /// Hiển thị dữ liệu của sheet Excel được chọn và đánh dấu đã chọn sheet.
         /// </summary>
         private void cbSheet_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GCData.DataSource = ds.Tables[cbSheet.SelectedIndex];
-            dk = 1;
+            int index = cbSheet.SelectedIndex;
+            if (_workbook == null || index < 0 || index >= _workbook.Tables.Count) return;
+            GCData.DataSource = _workbook.Tables[index];
+            _hasSelectedSheet = true;
         }
 
         /// <summary>
@@ -187,5 +207,17 @@ namespace Tooling_WH_Sytems.Input
         {
             eventHandler?.Invoke(sender, e);
         }
+        private bool _isReadingWorkbook;
+
+        /// <summary>Giải phóng workbook khi form không còn sử dụng dữ liệu.</summary>
+        private void DisposeWorkbook(object sender, EventArgs e)
+        {
+            if (_workbook != null)
+            {
+                _workbook.Dispose();
+                _workbook = null;
+            }
+        }
+
     }
 }

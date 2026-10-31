@@ -631,7 +631,7 @@
             this.Controls.Add(this.layoutControl1);
             this.Name = "frmInvenSpecPart";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "DANH SÁCH TỒN KHO";
+            this.Text = "DANH SÁCH TỒN KHO LINH KIỆN ĐẶC BIỆT";
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).EndInit();
             this.layoutControl1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.ckStatus6.Properties)).EndInit();

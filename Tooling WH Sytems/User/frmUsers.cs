@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -26,12 +27,12 @@ namespace Tooling_WH_Sytems.User
             InitializeComponent();
             LoadControl();
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LockControl();
             LoadData();
@@ -40,7 +41,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             string enCode = Kun_Static.UserStatic.EmCode;
             List<UsersDTO> listU = UsersDAO.Instance.GetListUser();
@@ -57,7 +58,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             cbEmployess.Enabled = false;
             txtUserName.Enabled = false;
@@ -72,7 +73,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             txtUserName.Enabled = true;
             txtPass.Enabled = true;
@@ -87,7 +88,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtUserName.Text = String.Empty;
             txtPass.Text = String.Empty;
@@ -96,21 +97,22 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
                 txtUserName.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["UserName"]).ToString();
                 cbEmployess.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["DisplayName"]).ToString();
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("frmUsers", ex);
             }
         }
         /// <summary>
         /// Nạp danh sách nhân viên theo phạm vi của tài khoản hiện tại.
         /// </summary>
-        void LoadEmployess()
+        private void LoadEmployess()
         {
             List<EmployesDTO> listE = new List<EmployesDTO>(); 
             string enCode = Kun_Static.UserStatic.EmCode;
@@ -138,9 +140,8 @@ namespace Tooling_WH_Sytems.User
         private void btnRePass_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string pass = UsersDAO.Instance.EnCodeMD5("1");
@@ -162,14 +163,13 @@ namespace Tooling_WH_Sytems.User
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             ClearText();
             OpenControl();
-            Isinsert = true;
+            _isInsert = true;
         }
 
         /// <summary>
@@ -178,9 +178,8 @@ namespace Tooling_WH_Sytems.User
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 4)
+            if (!UiActions.HasPermission(4))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (MessageBox.Show("bạn muốn xóa tài khoản này?".ToUpper(),"Thông Báo",MessageBoxButtons.OK) == DialogResult.OK)
@@ -200,13 +199,12 @@ namespace Tooling_WH_Sytems.User
         private void btnEdit_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             OpenControl();
-            Isinsert = false;
+            _isInsert = false;
             txtUserName.Enabled = false;
             txtPass.Enabled = false;
         }
@@ -231,7 +229,7 @@ namespace Tooling_WH_Sytems.User
                 return;
             }
             int id = UsersDAO.Instance.IdUsers(UserName);
-            if (Isinsert ==true)
+            if (_isInsert ==true)
             {
                 if(id == -1)
                 {

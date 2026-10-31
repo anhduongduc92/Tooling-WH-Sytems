@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -29,23 +30,23 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
             LockControl();
         }
-        bool IsInsert = false;
+        private bool IsInsert = false;
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = UsersDAO.Instance.GetUserGroup();
         }
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             btnAdd.Enabled = true;
             btnEdit.Enabled = true;
@@ -57,7 +58,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             btnAdd.Enabled = false;
             btnEdit.Enabled = false;
@@ -69,7 +70,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtNameGr.Text = String.Empty;
             lblId.Text = String.Empty;
@@ -77,15 +78,16 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
                 txtNameGr.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["NameUserGroup"]).ToString();
                 lblId.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Id"]).ToString();
             }
-            catch 
+            catch (Exception ex)
             {
+                AppLog.Write("frmUserGroup", ex);
             }
         }
         #endregion

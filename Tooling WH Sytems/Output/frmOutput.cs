@@ -169,8 +169,10 @@ namespace Tooling_WH_Sytems.Output
                     if (kun == 1)
                     {
                         Kun_Static.MaxIdOrder = idOrder;
-                        frmReasonError f = new frmReasonError();
-                        f.ShowDialog();
+                        using (frmReasonError f = new frmReasonError())
+            {
+                            f.ShowDialog();
+            }
                     }
                     string noteOrder = "Đã xuất kho -- "+ Kun_Static.NoteOut ;
                     MessageBox.Show("bạn xuất thành công !".ToUpper());

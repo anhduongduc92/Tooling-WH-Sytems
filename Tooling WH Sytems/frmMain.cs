@@ -55,7 +55,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Bật hoặc tắt chức năng trên Ribbon theo quyền của tài khoản.
         /// </summary>
-        void LoadParent()
+        private void LoadParent()
         {
             ArrayList visiblePages = this.Ribbon.TotalPageCategory.GetVisiblePages();
             foreach (RibbonPage page in visiblePages)
@@ -85,7 +85,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Lưu mức quyền của chức năng được chọn vào trạng thái dùng chung.
         /// </summary>
-        void LoadItem(ItemClickEventArgs e)
+        private void LoadItem(ItemClickEventArgs e)
         {
             int userRight = 0;
             if (Kun_Static.UserStatic.UserName == "admin")
@@ -101,7 +101,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Hiển thị tên tài khoản đăng nhập trên thanh công cụ.
         /// </summary>
-        void TextHeader()
+        private void TextHeader()
         {
             txtAccont.Caption = "TÀI KHOẢN: " +Kun_Static.UserStatic.DisplayName.ToUpper();
         }
@@ -128,7 +128,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Điểm mở rộng hiện chưa có xử lý; giữ nguyên hành vi hiện tại.
         /// </summary>
-        void LoadOrder()
+        private void LoadOrder()
         {
 
         }

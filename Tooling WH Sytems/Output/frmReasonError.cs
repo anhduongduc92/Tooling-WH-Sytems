@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,12 +32,12 @@ namespace Tooling_WH_Sytems.Output
         }
    
        
-        long maxId = Kun_Static.MaxIdOrder;
+        private long maxId = Kun_Static.MaxIdOrder;
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
         }
@@ -44,7 +45,7 @@ namespace Tooling_WH_Sytems.Output
         /// <summary>
         /// Tăng độ rộng cột số thứ tự khi nội dung hiển thị dài hơn.
         /// </summary>
-        bool cal(Int32 _Width, GridView _View)
+        private bool cal(Int32 _Width, GridView _View)
         {
             _View.IndicatorWidth = _View.IndicatorWidth < _Width ? _Width : _View.IndicatorWidth;
             return true;
@@ -85,7 +86,7 @@ namespace Tooling_WH_Sytems.Output
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = OrderDetailDAO.Instance.GetListOrderDetailById(maxId).Where(x=>x.PurPose == "Đổi");
         }
@@ -112,9 +113,10 @@ namespace Tooling_WH_Sytems.Output
                     {
                         quantityTT = (float)Convert.ToDouble(gridView1.GetRowCellValue(i, "Note").ToString());
                     }
-                    catch
-                    {
-                    }
+                    catch (Exception ex)
+            {
+                AppLog.Write("frmReasonError", ex);
+            }
                     string partOld = partCode + "-OLD";
                     long idPart = PartDAO.Instance.IdPartCode(partOld);
                     if(quantity - quantityTT >0)

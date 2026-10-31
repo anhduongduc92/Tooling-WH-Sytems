@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -27,13 +28,13 @@ namespace Tooling_WH_Sytems.Employess
             InitializeComponent();
             LoadControl();
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
     
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
             LockControl();
@@ -42,14 +43,14 @@ namespace Tooling_WH_Sytems.Employess
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = EmployessDAO.Instance.GetListEmployess();
         }
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             txtEmployesCode.Enabled = false;
             txtEmployesName.Enabled = false;
@@ -64,7 +65,7 @@ namespace Tooling_WH_Sytems.Employess
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             txtEmployesCode.Enabled = true;
             txtEmployesName.Enabled = true;
@@ -79,7 +80,7 @@ namespace Tooling_WH_Sytems.Employess
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
@@ -88,14 +89,15 @@ namespace Tooling_WH_Sytems.Employess
                 txtEMail.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Email"]).ToString();
                 lkGroup.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["NameGr"]).ToString();
             }
-            catch 
+            catch (Exception ex)
             {
+                AppLog.Write("frmEmployess", ex);
             }
         }
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtEmployesCode.Text = String.Empty;
             txtEmployesName.Text = String.Empty;
@@ -105,7 +107,7 @@ namespace Tooling_WH_Sytems.Employess
         /// <summary>
         /// Nạp danh sách nhóm nhân viên theo tài khoản đăng nhập.
         /// </summary>
-        void LoadGroup()
+        private void LoadGroup()
         {
             string enCode = Kun_Static.UserStatic.EmCode;
             if (enCode.ToUpper() == "ADMINISTRATOR")
@@ -138,14 +140,13 @@ namespace Tooling_WH_Sytems.Employess
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             OpenControl();
             ClearText();
-            Isinsert = true;
+            _isInsert = true;
         }
 
         /// <summary>
@@ -154,9 +155,8 @@ namespace Tooling_WH_Sytems.Employess
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn muốn xóa thông tin này ?".ToUpper(),"Thông Báo",MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -176,14 +176,13 @@ namespace Tooling_WH_Sytems.Employess
         private void btnEdit_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             OpenControl();
             txtEmployesCode.Enabled = false;
-            Isinsert = false;
+            _isInsert = false;
         }
 
         /// <summary>
@@ -196,7 +195,7 @@ namespace Tooling_WH_Sytems.Employess
             string Email = txtEMail.Text;
             string NameGr = lkGroup.Text.ToUpper();
             int id = EmployessDAO.Instance.IdEmployess(EmployessCode);
-            if(Isinsert == true)
+            if(_isInsert == true)
             {
                 if(id   ==  -1 && EmployessCode.Length > 0)
                 {
@@ -231,8 +230,10 @@ namespace Tooling_WH_Sytems.Employess
         /// </summary>
         private void btnDownload_Click(object sender, EventArgs e)
         {
-            frmFormEmployess f = new frmFormEmployess();
-            f.ShowDialog();
+            using (frmFormEmployess f = new frmFormEmployess())
+            {
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -240,60 +241,7 @@ namespace Tooling_WH_Sytems.Employess
         /// </summary>
         private void btnExport_Click(object sender, EventArgs e)
         {
-            #region Xuất Excel
-            using (SaveFileDialog saveDialog = new SaveFileDialog())
-            {
-                saveDialog.Filter = "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html";
-                if (saveDialog.ShowDialog() != DialogResult.Cancel)
-                {
-                    string exportFilePath = saveDialog.FileName;
-                    string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-                    switch (fileExtenstion)
-                    {
-                        case ".xls":
-                            GCData.ExportToXls(exportFilePath);
-                            break;
-                        case ".xlsx":
-                            GCData.ExportToXlsx(exportFilePath);
-                            break;
-                        case ".rtf":
-                            GCData.ExportToRtf(exportFilePath);
-                            break;
-                        case ".pdf":
-                            GCData.ExportToPdf(exportFilePath);
-                            break;
-                        case ".html":
-                            GCData.ExportToHtml(exportFilePath);
-                            break;
-                        case ".mht":
-                            GCData.ExportToMht(exportFilePath);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (File.Exists(exportFilePath))
-                    {
-                        try
-                        {
-                            //Try to open the file and let windows decide how to open it.
-                            System.Diagnostics.Process.Start(exportFilePath);
-                        }
-                        catch
-                        {
-                            String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else
-                    {
-                        String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            #endregion
+            GridExportService.Export(GCData, "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html");
         }
 
         /// <summary>
@@ -302,14 +250,15 @@ namespace Tooling_WH_Sytems.Employess
         private void btnInport_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            frmImportEmployess f = new frmImportEmployess();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmImportEmployess f = new frmImportEmployess())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>

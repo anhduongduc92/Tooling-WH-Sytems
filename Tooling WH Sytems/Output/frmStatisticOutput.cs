@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -32,14 +33,14 @@ namespace Tooling_WH_Sytems.Output
         /// <summary>
         /// Thiết lập cách hiển thị cột dữ liệu.
         /// </summary>
-        void LoadColum()
+        private void LoadColum()
         {
             gridView1.Columns["QuantityOut"].Summary.Add(DevExpress.Data.SummaryItemType.Sum, "QuantityOut", "Tổng = {0}");
         }
         /// <summary>
         /// Tăng độ rộng cột số thứ tự khi nội dung hiển thị dài hơn.
         /// </summary>
-        bool cal(Int32 _Width, GridView _View)
+        private bool cal(Int32 _Width, GridView _View)
         {
             _View.IndicatorWidth = _View.IndicatorWidth < _Width ? _Width : _View.IndicatorWidth;
             return true;
@@ -80,14 +81,14 @@ namespace Tooling_WH_Sytems.Output
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadDatetime();
         }
         /// <summary>
         /// Thiết lập khoảng thời gian mặc định rồi nạp dữ liệu thống kê.
         /// </summary>
-        void LoadDatetime()
+        private void LoadDatetime()
         {
             DateTime today = DateTime.Now.Date;
             dtpkFrom.Value = today.AddDays(-(today.Day - 1));
@@ -97,7 +98,7 @@ namespace Tooling_WH_Sytems.Output
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             DateTime date1 = dtpkFrom.Value;
             DateTime date2 = dtpkTo.Value;
@@ -125,60 +126,7 @@ namespace Tooling_WH_Sytems.Output
         /// </summary>
         private void btnExcel_Click(object sender, EventArgs e)
         {
-            #region Xuất Excel
-            using (SaveFileDialog saveDialog = new SaveFileDialog())
-            {
-                saveDialog.Filter = "Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html";
-                if (saveDialog.ShowDialog() != DialogResult.Cancel)
-                {
-                    string exportFilePath = saveDialog.FileName;
-                    string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-                    switch (fileExtenstion)
-                    {
-                        case ".xls":
-                            GCData.ExportToXls(exportFilePath);
-                            break;
-                        case ".xlsx":
-                            GCData.ExportToXlsx(exportFilePath);
-                            break;
-                        case ".rtf":
-                            GCData.ExportToRtf(exportFilePath);
-                            break;
-                        case ".pdf":
-                            GCData.ExportToPdf(exportFilePath);
-                            break;
-                        case ".html":
-                            GCData.ExportToHtml(exportFilePath);
-                            break;
-                        case ".mht":
-                            GCData.ExportToMht(exportFilePath);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (File.Exists(exportFilePath))
-                    {
-                        try
-                        {
-                            //Try to open the file and let windows decide how to open it.
-                            System.Diagnostics.Process.Start(exportFilePath);
-                        }
-                        catch
-                        {
-                            String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else
-                    {
-                        String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            #endregion
+            GridExportService.Export(GCData, "Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html");
         }
     }
 }

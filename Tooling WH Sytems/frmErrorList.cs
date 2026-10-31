@@ -16,7 +16,7 @@ namespace Tooling_WH_Sytems
     /// </summary>
     public partial class frmErrorList : DevExpress.XtraEditors.XtraForm
     {
-        List<string> errorList;
+        private List<string> errorList;
         /// <summary>
         /// Khởi tạo giao diện cùng các giá trị đầu vào của màn hình.
         /// </summary>

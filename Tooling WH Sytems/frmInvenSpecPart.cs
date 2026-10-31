@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -27,13 +28,14 @@ namespace Tooling_WH_Sytems
         public frmInvenSpecPart()
         {
             InitializeComponent();
+            InventoryRefreshRequested += OnInventoryRefreshRequested;
             LoadControl();
             gridView1.CustomDrawRowIndicator += gridView1_CustomDrawRowIndicator;
         }
         /// <summary>
         /// Tăng độ rộng cột số thứ tự khi nội dung hiển thị dài hơn.
         /// </summary>
-        bool cal(Int32 _Width, GridView _View)
+        private bool cal(Int32 _Width, GridView _View)
         {
             _View.IndicatorWidth = _View.IndicatorWidth < _Width ? _Width : _View.IndicatorWidth;
             return true;
@@ -74,24 +76,48 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
-            loadAsync();
-            loadData();
-            LoadCheck();
+            InventoryRefreshRequested?.Invoke(this, EventArgs.Empty);
         }
         /// <summary>
         /// Lần lượt cập nhật trạng thái phiếu nhập và trạng thái tồn linh kiện ở nền.
         /// </summary>
-        async void loadAsync()
+        private async void OnInventoryRefreshRequested(object sender, EventArgs e)
         {
-            await LoadIventory();
-            await loadInvenPart();
+            _inventoryRefreshRequested = true;
+            if (_isRefreshingInventory) return;
+            _isRefreshingInventory = true;
+            try
+            {
+                using (new BusyFormScope(this))
+                {
+                    do
+                    {
+                        _inventoryRefreshRequested = false;
+                        await LoadIventory();
+                        await loadInvenPart();
+                        if (IsDisposed) return;
+                        // Hiển thị sau khi cập nhật xong; không chạy chồng các lần làm mới.
+                        loadData();
+                        LoadCheck();
+                    }
+                    while (_inventoryRefreshRequested);
+                }
+            }
+            catch (Exception ex)
+            {
+                UiActions.ShowError("Không thể nạp dữ liệu tồn kho", ex);
+            }
+            finally
+            {
+                _isRefreshingInventory = false;
+            }
         }
         /// <summary>
         /// Bỏ chọn các bộ lọc trạng thái tồn kho.
         /// </summary>
-        void LoadCheck()
+        private void LoadCheck()
         {
             ckStatus1.Checked = false;
             ckStatus2.Checked = false;
@@ -102,7 +128,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Cập nhật trạng thái các phiếu nhập còn số lượng tồn bằng tác vụ nền.
         /// </summary>
-        async Task LoadIventory()
+        private async Task LoadIventory()
         {
             await Task.Run(() =>
             {
@@ -120,7 +146,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Cập nhật cảnh báo tồn kho theo số lượng, ngưỡng và ngày nhập hiện có.
         /// </summary>
-        async Task loadInvenPart()
+        private async Task loadInvenPart()
         {
             await Task.Run(() => {
 
@@ -172,7 +198,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Nạp tồn kho và sắp xếp theo trạng thái linh kiện.
         /// </summary>
-        void loadData()
+        private void loadData()
         {
             List<InvenPartDTO> listData = InventoryDAO.Instance.GetList(1);
             GCData.DataSource = listData.OrderByDescending(x => x.StatusPart);
@@ -225,10 +251,8 @@ namespace Tooling_WH_Sytems
         private void btnInput_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(),
-                    "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string employeeCode;
@@ -237,9 +261,11 @@ namespace Tooling_WH_Sytems
                 return;
             }
 
-            frmInputSpecPart f = new frmInputSpecPart();
-            f.eventHandler += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmInputSpecPart f = new frmInputSpecPart())
+            {
+                f.eventHandler += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -248,9 +274,8 @@ namespace Tooling_WH_Sytems
         private void btnOutput_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             string employeeCode;
@@ -267,9 +292,8 @@ namespace Tooling_WH_Sytems
         private void btnOutLocal_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
            
@@ -288,9 +312,8 @@ namespace Tooling_WH_Sytems
         private void btnInputLocal_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
       
@@ -343,60 +366,7 @@ namespace Tooling_WH_Sytems
         /// </summary>
         private void btnExport_Click(object sender, EventArgs e)
         {
-            #region Xuất Excel
-            using (SaveFileDialog saveDialog = new SaveFileDialog())
-            {
-                saveDialog.Filter = "Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html";
-                if (saveDialog.ShowDialog() != DialogResult.Cancel)
-                {
-                    string exportFilePath = saveDialog.FileName;
-                    string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-                    switch (fileExtenstion)
-                    {
-                        case ".xls":
-                            GCData.ExportToXls(exportFilePath);
-                            break;
-                        case ".xlsx":
-                            GCData.ExportToXlsx(exportFilePath);
-                            break;
-                        case ".rtf":
-                            GCData.ExportToRtf(exportFilePath);
-                            break;
-                        case ".pdf":
-                            GCData.ExportToPdf(exportFilePath);
-                            break;
-                        case ".html":
-                            GCData.ExportToHtml(exportFilePath);
-                            break;
-                        case ".mht":
-                            GCData.ExportToMht(exportFilePath);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (File.Exists(exportFilePath))
-                    {
-                        try
-                        {
-                            //Try to open the file and let windows decide how to open it.
-                            System.Diagnostics.Process.Start(exportFilePath);
-                        }
-                        catch
-                        {
-                            String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else
-                    {
-                        String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            #endregion
+            GridExportService.Export(GCData, "Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html");
         }
 
         /// <summary>
@@ -487,9 +457,8 @@ namespace Tooling_WH_Sytems
         private void btnConfirm_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn muốn xác nhận đặt hàng cho linh kiện này ?".ToUpper(), "Thông Báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -510,8 +479,10 @@ namespace Tooling_WH_Sytems
         /// </summary>
         private void btnDownload_Click(object sender, EventArgs e)
         {
-            frmFormInput f = new frmFormInput();
-            f.ShowDialog();
+            using (frmFormInput f = new frmFormInput())
+            {
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -520,9 +491,8 @@ namespace Tooling_WH_Sytems
         private void btnInputExcel_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
          
@@ -534,5 +504,9 @@ namespace Tooling_WH_Sytems
         {
             LoadControl();
         }
+        private event EventHandler InventoryRefreshRequested;
+        private bool _isRefreshingInventory;
+        private bool _inventoryRefreshRequested;
+
     }
 }

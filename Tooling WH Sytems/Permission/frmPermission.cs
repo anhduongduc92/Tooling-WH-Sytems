@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Nodes;
@@ -24,11 +25,11 @@ namespace Tooling_WH_Sytems.Permission
             InitializeComponent();
             LoadControl();
         }
-        int _IdUSer;
+        private int _IdUSer;
         /// <summary>
         /// Hiển thị mức quyền của chức năng đang chọn.
         /// </summary>
-        void LoadUserRight()
+        private void LoadUserRight()
         {
             int userRight = Kun_Static.UserRight;
             switch(userRight)
@@ -75,7 +76,7 @@ namespace Tooling_WH_Sytems.Permission
         /// <summary>
         /// Khởi tạo các giá trị dùng trong màn hình phân quyền.
         /// </summary>
-        void LoadValue()
+        private void LoadValue()
         {
             for (int i = 0; i < treeList1.Nodes.Count; i++)
             {
@@ -97,7 +98,7 @@ namespace Tooling_WH_Sytems.Permission
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             string enCode = Kun_Static.UserStatic.EmCode;
             List<UsersDTO> listU = UsersDAO.Instance.GetListUser();
@@ -114,7 +115,7 @@ namespace Tooling_WH_Sytems.Permission
         /// <summary>
         /// Nạp cây chức năng và quyền của tài khoản được chọn.
         /// </summary>
-        void LoadPermission(int idUser)
+        private void LoadPermission(int idUser)
         {
             treeList1.OptionsView.CheckBoxStyle = DefaultNodeCheckBoxStyle.Check;
             var tuple = TablePermission.Instance.GetAllTableMenu(frmMain.Instance.Ribbon, idUser);
@@ -212,8 +213,9 @@ namespace Tooling_WH_Sytems.Permission
                     e.Node.Checked = true;
                 }
             }
-            catch 
+            catch (Exception ex)
             {
+                AppLog.Write("frmPermission", ex);
             }
         }
 
@@ -230,10 +232,13 @@ namespace Tooling_WH_Sytems.Permission
                     e.NodeImageIndex = index;
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                AppLog.Write("frmPermission", ex);
+            }
         }
 
-        bool lockEvent = false;
+        private bool lockEvent = false;
         /// <summary>
         /// Đồng bộ tài khoản và quyền hiển thị khi thay đổi lựa chọn.
         /// </summary>
@@ -285,9 +290,9 @@ namespace Tooling_WH_Sytems.Permission
                 _IdUSer = int.Parse(gridView1.GetRowCellValue(
                     gridView1.FocusedRowHandle, gridView1.Columns["IdUser"]).ToString());
             }
-            catch 
+            catch (Exception ex)
             {
-
+                AppLog.Write("frmPermission", ex);
             }
             idUser = _IdUSer;
             if (idUser == 0)

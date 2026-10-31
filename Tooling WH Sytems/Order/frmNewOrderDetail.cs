@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,14 +32,14 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
         }
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = NewOrderDAO.Instance.GetListNewOrdById(Kun_Static.MaxNewIdOrder);
         }
@@ -60,10 +61,10 @@ namespace Tooling_WH_Sytems.Order
                     {
                         QuantityOr = (float)Convert.ToDouble(gridView1.GetRowCellValue(item, "QuantityOut").ToString());
                     }
-                    catch
-                    {
-
-                    }
+                    catch (Exception ex)
+            {
+                AppLog.Write("frmNewOrderDetail", ex);
+            }
                     if((qauntity-QuantityOr) == 0)
                     {
                         status = 0;
@@ -93,10 +94,10 @@ namespace Tooling_WH_Sytems.Order
                 {
                     QuantityOr = (float)Convert.ToDouble(gridView1.GetRowCellValue(i, "Quantity").ToString());
                 }
-                catch
-                {
-
-                }
+                catch (Exception ex)
+            {
+                AppLog.Write("frmNewOrderDetail", ex);
+            }
                 NewOrderDAO.Instance.UpdateNOrd(id, QuantityOr, today, 0, Kun_Static.UserStatic.UserName);
             }
             XtraMessageBox.Show("xác nhận phiếu thành công !".ToUpper());

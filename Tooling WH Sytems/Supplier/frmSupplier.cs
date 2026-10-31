@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -26,12 +27,12 @@ namespace Tooling_WH_Sytems.Supplier
             InitializeComponent();
             LoadControl();
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
             LockControl();
@@ -40,14 +41,14 @@ namespace Tooling_WH_Sytems.Supplier
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = SupplierDAO.Instance.GetListSupplier();
         }
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             txtSupplierCode.Enabled = false;
             txtSupplierName.Enabled = false;
@@ -63,7 +64,7 @@ namespace Tooling_WH_Sytems.Supplier
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             txtSupplierCode.Enabled = true;
             txtSupplierName.Enabled = true;
@@ -79,7 +80,7 @@ namespace Tooling_WH_Sytems.Supplier
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtSupplierCode.Text = String.Empty;
             txtSupplierName.Text = String.Empty;
@@ -90,7 +91,7 @@ namespace Tooling_WH_Sytems.Supplier
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
@@ -100,8 +101,9 @@ namespace Tooling_WH_Sytems.Supplier
                 txtPhone.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Phone"]).ToString();
                 txtEmail.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Email"]).ToString();
             }
-            catch 
+            catch (Exception ex)
             {
+                AppLog.Write("frmSupplier", ex);
             }
         }
         #endregion
@@ -112,13 +114,12 @@ namespace Tooling_WH_Sytems.Supplier
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             ClearText();
-            Isinsert = true;
+            _isInsert = true;
             OpenControl();
         }
 
@@ -128,9 +129,8 @@ namespace Tooling_WH_Sytems.Supplier
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn thực sự muốn xóa thông tin này?".ToUpper(),"Thông Báo",MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -150,12 +150,11 @@ namespace Tooling_WH_Sytems.Supplier
         private void btnEdit_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            Isinsert = false;
+            _isInsert = false;
             OpenControl();
             txtSupplierCode.Enabled = false;
         }
@@ -170,7 +169,7 @@ namespace Tooling_WH_Sytems.Supplier
             string Address = txtAddress.Text;
             string Phone = txtPhone.Text;
             string Email = txtEmail.Text;
-            if (Isinsert == true)
+            if (_isInsert == true)
             {
                 int id = SupplierDAO.Instance.IdSupplier(SupplierCode);
                 if(id == -1)
@@ -206,8 +205,10 @@ namespace Tooling_WH_Sytems.Supplier
         /// </summary>
         private void btnDownload_Click(object sender, EventArgs e)
         {
-            frmFormSupplier f = new frmFormSupplier();
-            f.ShowDialog();
+            using (frmFormSupplier f = new frmFormSupplier())
+            {
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -215,60 +216,7 @@ namespace Tooling_WH_Sytems.Supplier
         /// </summary>
         private void btnExport_Click(object sender, EventArgs e)
         {
-            #region Xuất Excel
-            using (SaveFileDialog saveDialog = new SaveFileDialog())
-            {
-                saveDialog.Filter = "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html";
-                if (saveDialog.ShowDialog() != DialogResult.Cancel)
-                {
-                    string exportFilePath = saveDialog.FileName;
-                    string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-                    switch (fileExtenstion)
-                    {
-                        case ".xls":
-                            GCData.ExportToXls(exportFilePath);
-                            break;
-                        case ".xlsx":
-                            GCData.ExportToXlsx(exportFilePath);
-                            break;
-                        case ".rtf":
-                            GCData.ExportToRtf(exportFilePath);
-                            break;
-                        case ".pdf":
-                            GCData.ExportToPdf(exportFilePath);
-                            break;
-                        case ".html":
-                            GCData.ExportToHtml(exportFilePath);
-                            break;
-                        case ".mht":
-                            GCData.ExportToMht(exportFilePath);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (File.Exists(exportFilePath))
-                    {
-                        try
-                        {
-                            //Try to open the file and let windows decide how to open it.
-                            System.Diagnostics.Process.Start(exportFilePath);
-                        }
-                        catch
-                        {
-                            String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else
-                    {
-                        String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            #endregion
+            GridExportService.Export(GCData, "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html");
         }
 
         /// <summary>
@@ -277,14 +225,15 @@ namespace Tooling_WH_Sytems.Supplier
         private void btnImport_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            frmImportSupplier f = new frmImportSupplier();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmImportSupplier f = new frmImportSupplier())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadPartCode();
             LoadSupplierCode();
@@ -38,7 +38,7 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Nạp danh sách mã linh kiện có thể chọn trên màn hình.
         /// </summary>
-        void LoadPartCode()
+        private void LoadPartCode()
         {
             lkPartCode.Properties.DataSource = PartDAO.Instance.GetList(0);
             lkPartCode.Properties.DisplayMember = "PartCode";
@@ -47,7 +47,7 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Nạp danh sách nhà cung cấp cho ô lựa chọn.
         /// </summary>
-        void LoadSupplierCode()
+        private void LoadSupplierCode()
         {
             lkSupplierCode.Properties.DataSource = SupplierDAO.Instance.GetListSupplier();
             lkSupplierCode.Properties.DisplayMember = "SupplierCode";
@@ -56,7 +56,7 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Hiển thị thông tin linh kiện ứng với mã đang chọn.
         /// </summary>
-        void LoadPartName()
+        private void LoadPartName()
         {
             lblPartName.Text = PartDAO.Instance.PartName(lkPartCode.Text);
             lblUnit.Text = PartDAO.Instance.UnitPart(lkPartCode.Text);
@@ -64,7 +64,7 @@ namespace Tooling_WH_Sytems.Input
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             lkPartCode.EditValue = null;
             txtQuantity.Text = string.Empty;

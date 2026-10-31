@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -26,11 +27,11 @@ namespace Tooling_WH_Sytems.Order
             InitializeComponent();
             LoadControl();
         }
-        List<OrderDetailDTO> listO = new List<OrderDetailDTO>();
+        private List<OrderDetailDTO> listO = new List<OrderDetailDTO>();
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadPart();
             ControlBox = false;
@@ -39,7 +40,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             List<OrderDetailDTO> listOd = new List<OrderDetailDTO>();
             foreach (OrderDetailDTO item in listO)
@@ -53,7 +54,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp danh sách linh kiện cho đơn yêu cầu.
         /// </summary>
-        void LoadPart()
+        private void LoadPart()
         {
             lkPartCode.Properties.DataSource = InventoryDAO.Instance.OnlyPartCode();
             lkPartCode.Properties.DisplayMember = "PartCode";
@@ -62,7 +63,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Hiển thị tên và số lượng tồn của linh kiện đang chọn.
         /// </summary>
-        void LoadPartInfor()
+        private void LoadPartInfor()
         {
             string part = lkPartCode.Text;
             txtPartName.Text = PartDAO.Instance.PartName(part);
@@ -71,7 +72,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             lkPartCode.Text = String.Empty;
             //txtPartName.Text = String.Empty;
@@ -95,10 +96,10 @@ namespace Tooling_WH_Sytems.Order
                 {
                     QuantityOr = (float)Convert.ToDouble(gridView1.GetRowCellValue(i, "QuantityOr").ToString());
                 }
-                catch
-                {
-
-                }
+                catch (Exception ex)
+            {
+                AppLog.Write("frmOrderDetailLocal", ex);
+            }
                 string PurPose = gridView1.GetRowCellValue(i, "PurPose").ToString();
                 string Reason = "";
                 string Note = gridView1.GetRowCellValue(i, "Note").ToString();

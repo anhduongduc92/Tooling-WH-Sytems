@@ -32,7 +32,7 @@ namespace Tooling_WH_Sytems.Backup
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             txtUrl.Enabled = false;
             btnBackup.Enabled = false;

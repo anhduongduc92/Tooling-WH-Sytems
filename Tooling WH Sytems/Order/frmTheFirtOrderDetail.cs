@@ -29,7 +29,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             MaximizeBox = false;
             string employess = Kun_Static.UserStatic.EmCode;
@@ -49,7 +49,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp các lựa chọn kiểu đơn yêu cầu.
         /// </summary>
-        void LoadStyleC()
+        private void LoadStyleC()
         {
             cbStyleC.Items.Add("Phiếu xuất kho");
             cbStyleC.Items.Add("Phiếu xuất nội bộ");
@@ -57,7 +57,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp các lựa chọn nhà máy.
         /// </summary>
-        void LoadFactory()
+        private void LoadFactory()
         {
             cbFactory.Items.Add("Đông Dương");
             cbFactory.Items.Add("Đông Dương 2");
@@ -99,16 +99,20 @@ namespace Tooling_WH_Sytems.Order
             XtraMessageBox.Show("thêm phiếu thành công !\n\nbạn hãy thêm chi tiết phiếu!".ToUpper());
             if(styleC == "Phiếu xuất nội bộ")
             {
-                frmOrderDetailLocal f = new frmOrderDetailLocal();
-                this.Hide();
-                f.ShowDialog();
+                using (frmOrderDetailLocal f = new frmOrderDetailLocal())
+            {
+                    this.Hide();
+                    f.ShowDialog();
+            }
                 this.Close();
             }
             else
             {
-                frmInputOrderDetail f = new frmInputOrderDetail();
-                this.Hide();
-                f.ShowDialog();
+                using (frmInputOrderDetail f = new frmInputOrderDetail())
+            {
+                    this.Hide();
+                    f.ShowDialog();
+            }
                 this.Close();
             }
         }

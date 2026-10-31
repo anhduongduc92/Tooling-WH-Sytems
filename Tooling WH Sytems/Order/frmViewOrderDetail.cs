@@ -28,7 +28,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp danh sách đơn yêu cầu theo mã đơn giảm dần.
         /// </summary>
-        void PartCode()
+        private void PartCode()
         {
             lkPart.Properties.DataSource = OrderDAO.Instance.GetListOrder().OrderByDescending(x=>x.IdOrder);
             lkPart.Properties.DisplayMember = "IdOrder";

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -30,15 +31,15 @@ namespace Tooling_WH_Sytems.Order
             gridView1.CustomDrawRowIndicator += gridView1_CustomDrawRowIndicator;
 
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
         public EventHandler LamMoi;
-        long maxId = Kun_Static.MaxIdOrder;
-        OrderDTO _order;
+        private long maxId = Kun_Static.MaxIdOrder;
+        private OrderDTO _order;
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadData();
             LockControl();
@@ -48,7 +49,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             btnAdd.Enabled = true;
             btnEdit.Enabled = true;
@@ -64,7 +65,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             btnAdd.Enabled = false;
             btnEdit.Enabled = false;
@@ -80,7 +81,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             lkPartCode.Text = String.Empty;
             txtQuantity.Text = String.Empty;
@@ -92,7 +93,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
@@ -103,14 +104,15 @@ namespace Tooling_WH_Sytems.Order
                 lblId.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["IdOrd"]).ToString();
                 cbReason.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["Reason"]).ToString();
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("frmOrderDetail", ex);
             }
         }
         /// <summary>
         /// Nạp danh sách linh kiện cho đơn yêu cầu.
         /// </summary>
-        void LoadPart()
+        private void LoadPart()
         {
             List<OnlyPart> listO = InventoryDAO.Instance.OnlyPartCode();
             lkPartCode.Properties.DataSource = listO;
@@ -120,7 +122,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp danh mục mục đích sử dụng linh kiện.
         /// </summary>
-        void LoadPurPose()
+        private void LoadPurPose()
         {
             List<PurPose> listP = DataSorceDAO.Instance.GetListPurPose();
             cbPurPose.DataSource = listP;
@@ -130,7 +132,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp danh mục lý do sử dụng linh kiện.
         /// </summary>
-        void LoadReason()
+        private void LoadReason()
         {
             List<Reason> listR = DataSorceDAO.Instance.GetListReason();
             cbReason.DataSource = listR;
@@ -140,7 +142,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Tăng độ rộng cột số thứ tự khi nội dung hiển thị dài hơn.
         /// </summary>
-        bool cal(Int32 _Width, GridView _View)
+        private bool cal(Int32 _Width, GridView _View)
         {
             _View.IndicatorWidth = _View.IndicatorWidth < _Width ? _Width : _View.IndicatorWidth;
             return true;
@@ -181,14 +183,14 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = OrderDetailDAO.Instance.GetListOrderDetailById(maxId);
         }
         /// <summary>
         /// Hiển thị tên và số lượng tồn của linh kiện đang chọn.
         /// </summary>
-        void LoadPartInfor()
+        private void LoadPartInfor()
         {
             string part = lkPartCode.Text;
             txtName.Text = PartDAO.Instance.PartName(part);
@@ -220,7 +222,7 @@ namespace Tooling_WH_Sytems.Order
             string Reason = cbReason.Text;
             string Note = txtNote.Text;
             string noteOrder = "Phiều này đã được chỉnh sửa bởi : " + Kun_Static.UserStatic.DisplayName;
-            if (Isinsert == true)
+            if (_isInsert == true)
             {
                 OrderDetailDAO.Instance.InsertOrderDetail(maxId, PartCode, QuantityOr, PurPose, Reason, Note,1);
                 OrderDAO.Instance.UpdateOrder(maxId,3, noteOrder);
@@ -249,7 +251,7 @@ namespace Tooling_WH_Sytems.Order
         /// </summary>
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            Isinsert = true;
+            _isInsert = true;
             ClearText();
             OpenControl();
         }
@@ -283,7 +285,7 @@ namespace Tooling_WH_Sytems.Order
         /// </summary>
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            Isinsert = false;
+            _isInsert = false;
             OpenControl();
         }
 
@@ -368,9 +370,8 @@ namespace Tooling_WH_Sytems.Order
             _order = OrderDAO.Instance.GetListOrderById(maxId);
             int statusOrder = _order.StatusOrder;
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             else if(_order.StatusOrder != 4)

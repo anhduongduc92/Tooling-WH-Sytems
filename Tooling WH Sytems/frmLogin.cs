@@ -52,15 +52,22 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Thiết lập định dạng ngày ngắn của Windows và thông báo thay đổi.
         /// </summary>
-        void SetupDate()
+        private void SetupDate()
         {
             if (SetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SSHORTDATE, "dd/MM/yyyy"))
             {
                 int dwRecipients = BSM_APPLICATIONS | BSM_ALLDESKTOPS;
                 string sString = "intl";
                 GCHandle GCH = GCHandle.Alloc(sString, GCHandleType.Pinned);
-                IntPtr pString = GCH.AddrOfPinnedObject();
-                BroadcastSystemMessage(BSF_FORCEIFHUNG | BSF_IGNORECURRENTTASK | BSF_NOHANG | BSF_NOTIMEOUTIFNOTHUNG, ref dwRecipients, WM_WININICHANGE, 0, pString);
+                try
+                {
+                    IntPtr pString = GCH.AddrOfPinnedObject();
+                    BroadcastSystemMessage(BSF_FORCEIFHUNG | BSF_IGNORECURRENTTASK | BSF_NOHANG | BSF_NOTIMEOUTIFNOTHUNG, ref dwRecipients, WM_WININICHANGE, 0, pString);
+                }
+                finally
+                {
+                    GCH.Free();
+                }
             }
         }
         /// <summary>
@@ -85,7 +92,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Kiểm tra thông tin đăng nhập qua tầng truy cập dữ liệu.
         /// </summary>
-        bool Login(string userN, string passW)
+        private bool Login(string userN, string passW)
         {
             return UsersDAO.Instance.Login(userN, passW);
         }
@@ -102,14 +109,17 @@ namespace Tooling_WH_Sytems
             {
                 UsersDTO userLogin = UsersDAO.Instance.GetListUserByCode(userN);
                 Kun_Static.UserStatic = userLogin;
-                frmMain f = new frmMain();
-                this.Hide();
-                f.ShowDialog();
+                using (frmMain f = new frmMain())
+            {
+                    this.Hide();
+                    f.ShowDialog();
+            }
                 this.Show();
             }
             else
             {
-                XtraMessageBox.Show("Tài khoản hoặc mật khẩu không đúng!".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                XtraMessageBox.Show("Tài khoản hoặc mật khẩu không đúng!".ToUpper(),
+                    "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 txtPassWord.SelectAll();
                 return;
             }
@@ -129,7 +139,8 @@ namespace Tooling_WH_Sytems
         /// </summary>
         private void frmLogin_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(MessageBox.Show("bạn thực sự muốn thoát phần mềm !".ToUpper(),"Thông Báo",MessageBoxButtons.OKCancel) != DialogResult.OK)
+            if(MessageBox.Show("bạn thực sự muốn thoát phần mềm !".ToUpper(),
+                "Thông Báo",MessageBoxButtons.OKCancel) != DialogResult.OK)
             {                
                 e.Cancel = true;
             }

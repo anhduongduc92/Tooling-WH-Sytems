@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -30,7 +31,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             List<NewOrderDTO> listNO = NewOrderDAO.Instance.GetListNewOrder();
             foreach (NewOrderDTO item in listNO)
@@ -60,9 +61,11 @@ namespace Tooling_WH_Sytems.Order
             {
                 long id = long.Parse(gridView1.GetFocusedRowCellValue("Id").ToString());
                 Kun_Static.MaxNewIdOrder = id;
-                frmNewOrderDetail f = new frmNewOrderDetail();
-                f.LamMoi += new EventHandler(btnUpdate_Click);
-                f.ShowDialog();
+                using (frmNewOrderDetail f = new frmNewOrderDetail())
+            {
+                    f.LamMoi += new EventHandler(btnUpdate_Click);
+                    f.ShowDialog();
+            }
             }
             else
             {
@@ -76,9 +79,11 @@ namespace Tooling_WH_Sytems.Order
         /// </summary>
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            frmNewInportOrder f = new frmNewInportOrder();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmNewInportOrder f = new frmNewInportOrder())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -89,9 +94,8 @@ namespace Tooling_WH_Sytems.Order
 
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
 
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn thực sự muốn xóa thông tin này ?".ToUpper(), "Thông Báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -161,9 +165,11 @@ namespace Tooling_WH_Sytems.Order
             {
                 long id = long.Parse(gridView1.GetFocusedRowCellValue("Id").ToString());
                 Kun_Static.MaxNewIdOrder = id;
-                frmNewOrderDetail f = new frmNewOrderDetail();
-                f.LamMoi += new EventHandler(btnUpdate_Click);
-                f.ShowDialog();
+                using (frmNewOrderDetail f = new frmNewOrderDetail())
+            {
+                    f.LamMoi += new EventHandler(btnUpdate_Click);
+                    f.ShowDialog();
+            }
             }
             else
             {

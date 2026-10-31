@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -32,12 +33,12 @@ namespace Tooling_WH_Sytems.Order
             LoadControl();
             timer1.Start();
         }
-        OrderDTO _order;
-        OrderDetailDTO _orderDerail;
+        private OrderDTO _order;
+        private OrderDetailDTO _orderDerail;
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LoadDate();
             LoadData();
@@ -46,7 +47,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Thiết lập khoảng ngày mặc định để lọc danh sách đơn.
         /// </summary>
-        void LoadDate()
+        private void LoadDate()
         {
             DateTime today = DateTime.Now;
             dtpkFrom.Value = today.Date.AddDays(1 - today.Day);
@@ -55,7 +56,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             DateTime date1 = dtpkFrom.Value;
             DateTime date2 = dtpkTo.Value;
@@ -79,7 +80,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Thiết lập nội dung thông báo cho danh sách đơn yêu cầu.
         /// </summary>
-        void LoadAlert()
+        private void LoadAlert()
         {
             AlertButton btn = new AlertButton(Properties.Resources.Apply_16x16);
             btn.Hint = "Open File";
@@ -95,7 +96,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Lọc các đơn cần xử lý theo phòng ban và hiển thị cảnh báo.
         /// </summary>
-        void LadWarning()
+        private void LadWarning()
         {
             if (Kun_Static.UserRight >= 3)
             {
@@ -123,8 +124,10 @@ namespace Tooling_WH_Sytems.Order
         {
             if (e.ButtonName == "buttonOpen")
             {
-                frmOrderList f = new frmOrderList();
-                f.ShowDialog();
+                using (frmOrderList f = new frmOrderList())
+            {
+                    f.ShowDialog();
+            }
             }
         }
 
@@ -134,14 +137,15 @@ namespace Tooling_WH_Sytems.Order
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            frmTheFirtOrderDetail f = new frmTheFirtOrderDetail();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmTheFirtOrderDetail f = new frmTheFirtOrderDetail())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -150,9 +154,8 @@ namespace Tooling_WH_Sytems.Order
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn thực sự muốn xóa thông tin này ?".ToUpper(), "Thông Báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -183,9 +186,11 @@ namespace Tooling_WH_Sytems.Order
                 return;
             }
             Kun_Static.MaxIdOrder = id;
-            frmOrderDetail f = new frmOrderDetail();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmOrderDetail f = new frmOrderDetail())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -194,9 +199,8 @@ namespace Tooling_WH_Sytems.Order
         private void btnAppro_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 4)
+            if (!UiActions.HasPermission(4))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             DateTime today = DateTime.Now;
@@ -271,8 +275,9 @@ namespace Tooling_WH_Sytems.Order
             {
                 lblId.Text = gridView1.GetRowCellValue(gridView1.FocusedRowHandle, gridView1.Columns["IdOrder"]).ToString();
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Write("frmOrderList", ex);
             }
         }
 
@@ -339,9 +344,8 @@ namespace Tooling_WH_Sytems.Order
         private void btnConfirm_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             DateTime today = DateTime.Now;
@@ -395,9 +399,11 @@ namespace Tooling_WH_Sytems.Order
                 return;
             }
             Kun_Static.MaxIdOrder = id;
-            frmOrderDetail f = new frmOrderDetail();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmOrderDetail f = new frmOrderDetail())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
 
         /// <summary>

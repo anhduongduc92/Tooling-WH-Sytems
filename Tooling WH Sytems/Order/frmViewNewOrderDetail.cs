@@ -29,7 +29,7 @@ namespace Tooling_WH_Sytems.Order
         /// <summary>
         /// Nạp danh sách đơn đặt hàng để tra cứu.
         /// </summary>
-        void LoadOrder()
+        private void LoadOrder()
         {
             lkOrder.Properties.DataSource = NewOrderDAO.Instance.GetListNewOrder();
             lkOrder.Properties.DisplayMember = "Id";

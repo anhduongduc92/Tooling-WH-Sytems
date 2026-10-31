@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tooling_WH_Sytems.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,7 +32,7 @@ namespace Tooling_WH_Sytems.Part
         /// <summary>
         /// Tăng độ rộng cột số thứ tự khi nội dung hiển thị dài hơn.
         /// </summary>
-        bool cal(Int32 _Width, GridView _View)
+        private bool cal(Int32 _Width, GridView _View)
         {
             _View.IndicatorWidth = _View.IndicatorWidth < _Width ? _Width : _View.IndicatorWidth;
             return true;
@@ -70,12 +71,12 @@ namespace Tooling_WH_Sytems.Part
                 BeginInvoke(new MethodInvoker(delegate { cal(_Width, gridView1); }));
             }
         }
-        bool Isinsert = false;
+        private bool _isInsert = false;
         #region Control
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             LockControl();
             LoadData();
@@ -84,14 +85,14 @@ namespace Tooling_WH_Sytems.Part
         /// <summary>
         /// Nạp dữ liệu nghiệp vụ vào bảng hiển thị.
         /// </summary>
-        void LoadData()
+        private void LoadData()
         {
             GCData.DataSource = PartDAO.Instance.GetListPart();
         }
         /// <summary>
         /// Khóa vùng nhập liệu và đưa các nút về chế độ xem.
         /// </summary>
-        void LockControl()
+        private void LockControl()
         {
             txtPartCode.Enabled = false;
             txtPartName.Enabled = false;
@@ -108,7 +109,7 @@ namespace Tooling_WH_Sytems.Part
         /// <summary>
         /// Mở vùng nhập liệu cho thao tác thêm hoặc chỉnh sửa.
         /// </summary>
-        void OpenControl()
+        private void OpenControl()
         {
             txtPartCode.Enabled = true;
             txtPartName.Enabled = true;
@@ -125,7 +126,7 @@ namespace Tooling_WH_Sytems.Part
         /// <summary>
         /// Xóa nội dung các ô nhập để chuẩn bị bản ghi mới.
         /// </summary>
-        void ClearText()
+        private void ClearText()
         {
             txtPartCode.Text = String.Empty;
             txtPartName.Text = String.Empty;
@@ -137,7 +138,7 @@ namespace Tooling_WH_Sytems.Part
         /// <summary>
         /// Đưa dữ liệu của dòng đang chọn lên các ô thông tin.
         /// </summary>
-        void AddText()
+        private void AddText()
         {
             try
             {
@@ -155,14 +156,14 @@ namespace Tooling_WH_Sytems.Part
                         chkSpecPart.Checked = true;
                     }
                 }
-                catch
-                {
-
-                }
-            }
-            catch 
+                catch (Exception ex)
             {
-
+                AppLog.Write("frmPart", ex);
+            }
+            }
+            catch (Exception ex)
+            {
+                AppLog.Write("frmPart", ex);
             }
         }
         /// <summary>
@@ -180,8 +181,10 @@ namespace Tooling_WH_Sytems.Part
         /// </summary>
         private void btnDownload_Click(object sender, EventArgs e)
         {
-            frmFormPart f = new frmFormPart();
-            f.ShowDialog();
+            using (frmFormPart f = new frmFormPart())
+            {
+                f.ShowDialog();
+            }
         }
 
         /// <summary>
@@ -190,14 +193,15 @@ namespace Tooling_WH_Sytems.Part
         private void btnImport_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            frmImportPart f = new frmImportPart();
-            f.LamMoi += new EventHandler(btnUpdate_Click);
-            f.ShowDialog();
+            using (frmImportPart f = new frmImportPart())
+            {
+                f.LamMoi += new EventHandler(btnUpdate_Click);
+                f.ShowDialog();
+            }
         }
         /// <summary>
         /// Chuẩn bị dữ liệu hoặc mở màn hình để thêm bản ghi mới.
@@ -205,13 +209,12 @@ namespace Tooling_WH_Sytems.Part
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             ClearText();
-            Isinsert = true;
+            _isInsert = true;
             OpenControl();
         }
         /// <summary>
@@ -220,9 +223,8 @@ namespace Tooling_WH_Sytems.Part
         private void btnDelete_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 3)
+            if (!UiActions.HasPermission(3))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (XtraMessageBox.Show("bạn muốn xóa thông tin này?".ToUpper(),"Thông Báo",MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -241,12 +243,11 @@ namespace Tooling_WH_Sytems.Part
         private void btnEdit_Click(object sender, EventArgs e)
         {
             // Kiểm tra mức quyền tối thiểu trước khi thay đổi dữ liệu.
-            if (Kun_Static.UserRight < 2)
+            if (!UiActions.HasPermission(2))
             {
-                XtraMessageBox.Show("bạn không có quyền !".ToUpper(), "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            Isinsert = false;
+            _isInsert = false;
             OpenControl();
             txtPartCode.Enabled = false;
         }
@@ -262,60 +263,7 @@ namespace Tooling_WH_Sytems.Part
         /// </summary>
         private void btnExport_Click(object sender, EventArgs e)
         {
-            #region Xuất Excel
-            using (SaveFileDialog saveDialog = new SaveFileDialog())
-            {
-                saveDialog.Filter = "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html";
-                if (saveDialog.ShowDialog() != DialogResult.Cancel)
-                {
-                    string exportFilePath = saveDialog.FileName;
-                    string fileExtenstion = new FileInfo(exportFilePath).Extension;
-
-                    switch (fileExtenstion)
-                    {
-                        case ".xls":
-                            GCData.ExportToXls(exportFilePath);
-                            break;
-                        case ".xlsx":
-                            GCData.ExportToXlsx(exportFilePath);
-                            break;
-                        case ".rtf":
-                            GCData.ExportToRtf(exportFilePath);
-                            break;
-                        case ".pdf":
-                            GCData.ExportToPdf(exportFilePath);
-                            break;
-                        case ".html":
-                            GCData.ExportToHtml(exportFilePath);
-                            break;
-                        case ".mht":
-                            GCData.ExportToMht(exportFilePath);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (File.Exists(exportFilePath))
-                    {
-                        try
-                        {
-                            //Try to open the file and let windows decide how to open it.
-                            System.Diagnostics.Process.Start(exportFilePath);
-                        }
-                        catch
-                        {
-                            String msg = "The file could not be opened." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                            MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else
-                    {
-                        String msg = "The file could not be saved." + Environment.NewLine + Environment.NewLine + "Path: " + exportFilePath;
-                        MessageBox.Show(msg, "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-            #endregion
+            GridExportService.Export(GCData, "Excel (2003)(.xls)|*.xls|Excel (2010) (.xlsx)|*.xlsx |RichText File (.rtf)|*.rtf |Pdf File (.pdf)|*.pdf |Html File (.html)|*.html");
         }
 
         /// <summary>
@@ -364,7 +312,7 @@ namespace Tooling_WH_Sytems.Part
                 spec = 0;
             }
             
-            if(Isinsert == true)
+            if(_isInsert == true)
             {
                 long id = PartDAO.Instance.IdPartCode(partCode);
                 if (id == -1)

@@ -28,12 +28,12 @@ namespace Tooling_WH_Sytems
             InitializeComponent();
             LoadControl();
         }
-        string _emCode = "";
+        private string _emCode = "";
       
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             this.AcceptButton = btnOK;
             this.CancelButton = btnExit;
@@ -42,7 +42,7 @@ namespace Tooling_WH_Sytems
         /// <summary>
         /// Chuẩn hóa, kiểm tra và lưu mã nhân viên hợp lệ.
         /// </summary>
-        void LoadFunction()
+        private void LoadFunction()
         {
             string code = txtEmployessCode.Text;
             string emCode = code.ToUpper();

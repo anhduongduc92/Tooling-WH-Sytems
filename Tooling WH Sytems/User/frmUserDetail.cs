@@ -28,7 +28,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Khởi tạo hoặc nạp lại dữ liệu và trạng thái điều khiển của màn hình.
         /// </summary>
-        void LoadControl()
+        private void LoadControl()
         {
             txtUserName.Text = Kun_Static.UserStatic.UserName;
             txtDisplayName.Text = Kun_Static.UserStatic.EmCode;
@@ -36,7 +36,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Xóa nội dung các ô mật khẩu sau thao tác.
         /// </summary>
-        void LoadClearText()
+        private void LoadClearText()
         {
             txtPass.Text = String.Empty;
             txtNewPass.Text = String.Empty;
@@ -45,7 +45,7 @@ namespace Tooling_WH_Sytems.User
         /// <summary>
         /// Kiểm tra mật khẩu hiện tại và mật khẩu mới trước khi cập nhật.
         /// </summary>
-        void UpdateUser()
+        private void UpdateUser()
         {
             string password = UsersDAO.Instance.EnCodeMD5(txtPass.Text);
             string newpass = UsersDAO.Instance.EnCodeMD5(txtNewPass.Text);

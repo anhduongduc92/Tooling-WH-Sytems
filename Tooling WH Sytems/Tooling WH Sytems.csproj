@@ -322,6 +322,11 @@
     <Compile Include="Part\frmPart.Designer.cs">
       <DependentUpon>frmPart.cs</DependentUpon>
     </Compile>
+    <Compile Include="Infrastructure\AppLog.cs" />
+    <Compile Include="Infrastructure\BusyFormScope.cs" />
+    <Compile Include="Infrastructure\ExcelWorkbookReader.cs" />
+    <Compile Include="Infrastructure\GridExportService.cs" />
+    <Compile Include="Infrastructure\UiActions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report\rpOrderdetail.cs">

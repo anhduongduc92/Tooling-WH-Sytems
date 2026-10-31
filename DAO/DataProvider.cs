@@ -31,23 +31,27 @@ namespace DAO
             using (SqlConnection conn = new SqlConnection(connectionSTR))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand(query, conn);
-                if (parameter != null)
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    String[] Listpara = query.Split(' ');
-                    int i = 0;
-                    foreach (string item in Listpara)
+                    if (parameter != null)
                     {
-                        if (item.Contains('@'))
+                        String[] Listpara = query.Split(' ');
+                        int i = 0;
+                        foreach (string item in Listpara)
                         {
-                            cmd.Parameters.AddWithValue(item, parameter[i]);
-                            i++;
+                            if (item.Contains('@'))
+                            {
+                                cmd.Parameters.AddWithValue(item, parameter[i]);
+                                i++;
+                            }
                         }
-                    }
                 }
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-                da.Fill(dt);
+                using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                {
+                    da.Fill(dt);
+                }
                 conn.Close();
+                }
             }
             return dt;
         }
@@ -57,23 +61,25 @@ namespace DAO
             using (SqlConnection conn = new SqlConnection(connectionSTR))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand(query, conn);
-                if (parameter != null)
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    String[] Listpara = query.Split(' ');
-                    int i = 0;
-                    foreach (string item in Listpara)
+                    if (parameter != null)
                     {
-                        if (item.Contains('@'))
+                        String[] Listpara = query.Split(' ');
+                        int i = 0;
+                        foreach (string item in Listpara)
                         {
-                            cmd.Parameters.AddWithValue(item, parameter[i]);
-                            i++;
+                            if (item.Contains('@'))
+                            {
+                                cmd.Parameters.AddWithValue(item, parameter[i]);
+                                i++;
+                            }
                         }
-                    }
                 }
                 dt = cmd.ExecuteNonQuery();
 
                 conn.Close();
+                }
             }
             return dt;
         }
@@ -83,22 +89,24 @@ namespace DAO
             using (SqlConnection conn = new SqlConnection(connectionSTR))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand(query, conn);
-                if (parameter != null)
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    String[] Listpara = query.Split(' ');
-                    int i = 0;
-                    foreach (string item in Listpara)
+                    if (parameter != null)
                     {
-                        if (item.Contains('@'))
+                        String[] Listpara = query.Split(' ');
+                        int i = 0;
+                        foreach (string item in Listpara)
                         {
-                            cmd.Parameters.AddWithValue(item, parameter[i]);
-                            i++;
+                            if (item.Contains('@'))
+                            {
+                                cmd.Parameters.AddWithValue(item, parameter[i]);
+                                i++;
+                            }
                         }
-                    }
                 }
                 dt = cmd.ExecuteScalar();
                 conn.Close();
+                }
             }
             return dt;
         }
@@ -108,9 +116,11 @@ namespace DAO
             using (SqlConnection conn = new SqlConnection(connectionSTR))
             {
                 conn.Open();
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.ExecuteNonQuery();
-                conn.Close();
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+                }
             }
         }
         /// <summary>

@@ -1,98 +1,67 @@
-﻿HƯỚNG DẪN BẢN CODE CÓ COMMENT
-============================
+﻿BẢN REFACTOR CODE - TOOLING WH SYTEMS
+====================================
 
-1. Mở project
+1. MỞ VÀ BUILD PROJECT
 - Giải nén toàn bộ thư mục Tooling WH Sytems.
-- Mở Tooling WH Sytems.sln bằng Visual Studio trên Windows.
-- Sử dụng .NET Framework 4.6.1 Targeting Pack và DevExpress 19.1
-  (project tham chiếu phiên bản assembly 19.1.16.0), như bản gốc.
-- Chạy Restore NuGet Packages nếu Visual Studio yêu cầu.
+- Mở Tooling WH Sytems.sln trong Visual Studio trên Windows.
+- Cài .NET Framework 4.6.1 Targeting Pack và DevExpress 19.1
+  (assembly 19.1.16.0) theo tham chiếu project hiện tại.
+- Restore NuGet Packages nếu Visual Studio yêu cầu.
 - Chọn Build > Rebuild Solution trước khi chạy.
-  Các file exe/dll trong bin được giữ lại từ bản gốc, chưa chứa code vừa sửa.
+- Các file bin/obj được giữ theo project cũ; EXE/DLL có sẵn chưa phản ánh
+  code vừa chỉnh. Hãy chạy bản sau khi Rebuild thành công.
+- Cấu hình kết nối SQL Server theo môi trường đang sử dụng như project cũ.
 
-2. Nội dung đã chỉnh
-- Bổ sung comment tiếng Việt dạng XML summary cho 43 form và 1 report:
-  tổng cộng 450 hàm/constructor trong phần code xử lý.
-- Giải thích các điểm kiểm tra quyền và phân biệt thêm mới/cập nhật.
-- Giữ nguyên file Designer.cs, resx, solution, project, tài nguyên,
-  tham chiếu thư viện và cấu trúc thư mục hiện có.
-- 43 file form/report chỉ thêm comment và chuẩn hóa xuống dòng;
-  các token lệnh C# đã được đối chiếu khớp với bản gốc.
+2. NHỮNG PHẦN ĐÃ CẢI THIỆN
+- Giữ các comment tiếng Việt trong code form/report từ bản trước.
+- Tách Infrastructure/GridExportService: 11 màn hình dùng chung quy trình
+  xuất file, giữ danh sách định dạng xuất riêng của từng màn hình.
+- Tách UiActions: kiểm tra quyền và thông báo lỗi dùng chung;
+  giữ nguyên 40 ngưỡng kiểm tra quyền đã tách.
+- Tách AppLog: ghi lỗi kỹ thuật trong LocalApplicationData của người dùng,
+  theo đường dẫn Tooling WH Sytems/Logs/yyyy-MM-dd.log.
+- 30 hộp thoại form được bọc using để giải phóng sau khi sử dụng.
+- DataProvider giải phóng SqlCommand/SqlDataAdapter bằng using;
+  giữ nguyên truy vấn, tham số, thứ tự thực thi và giá trị trả về.
+- Giải phóng GCHandle trong finally ở màn hình đăng nhập.
+- Chuẩn hóa một số tên biến private và khai báo phạm vi truy cập rõ ràng.
 
-3. Async/await
-- Form Backup: chuyển nút sao lưu sang async/await, dùng OpenAsync và
-  ExecuteNonQueryAsync của SqlClient để không chặn luồng giao diện.
-- Thêm BackupDataBaseAsync trong BackupDAO và DataProvider.
-- Giữ toàn bộ API đồng bộ cũ để các chỗ gọi hiện tại tiếp tục hoạt động.
-- Giữ nguyên câu SQL BACKUP, database ToolWH, tên file .BAK,
-  quy tắc thời gian trong tên file và timeout mặc định.
-- Khi đang sao lưu: khóa hai nút chọn thư mục/sao lưu, ngăn đóng form;
-  sau khi xong hoặc lỗi thì khôi phục trạng thái nút. Lỗi được thông báo,
-  màn hình chờ được đóng trong finally.
-- Hai form frmInventory và frmInvenSpecPart đã có async trong bản gốc:
-  giữ nguyên tác vụ, thứ tự gọi và cách nạp dữ liệu hiện tại, thêm comment.
-- Các thao tác nhập/xuất, phân bổ tồn kho, thêm/sửa/xóa và truy cập control
-  khác giữ nguyên để tránh thay đổi trình tự nghiệp vụ.
+3. ASYNC/AWAIT
+- Giữ phần sao lưu async/await của bản trước, giữ API đồng bộ cũ.
+- 5 form nhập Excel: chỉ đọc tệp ở tác vụ nền; gán dữ liệu/control trên
+  luồng giao diện, chặn mở chồng, đóng reader/stream và giải phóng workbook.
+- frmInventory và frmInvenSpecPart: chờ cập nhật trạng thái tồn xong rồi
+  hiển thị dữ liệu; gom yêu cầu làm mới để không chạy chồng trên cùng form.
+- BusyFormScope khóa thao tác và ngăn đóng form trong khi chờ tác vụ;
+  khôi phục trạng thái trong Dispose sau khi xong hoặc gặp lỗi.
 
-4. Kiểm tra đã thực hiện
-- Phân tích cú pháp toàn bộ mã C#: không phát hiện lỗi cú pháp.
-- Kiểm tra các file được khai báo trong csproj: không thiếu file.
-- Đối chiếu 43 file chỉ thêm comment: câu lệnh C# khớp bản gốc.
-- Đối chiếu các hàm DAO cũ: giữ nguyên câu lệnh.
-- Không build/chạy được ứng dụng tại môi trường xử lý này vì thiếu
-  Windows, .NET Framework và DevExpress. Chưa kiểm thử kết nối SQL Server.
+4. NHỮNG ĐIỀU CHỈNH HÀNH VI CẦN CHÚ Ý
+- Thuật toán tính tồn, điều kiện nghiệp vụ, truy vấn SQL, tham số và
+  thứ tự các lời gọi DAO trong từng hàm nghiệp vụ cũ được giữ nguyên.
+- Các lỗi nhập Excel trước đây bị bỏ qua nay được ghi nhận theo dòng;
+  tránh hiển thị nhập thành công khi có dòng phát sinh exception.
+- Số lượng Excel không chuyển được sang số sẽ về 0 để bị kiểm tra là
+  không hợp lệ, tránh dùng lại số lượng của dòng trước.
+- Bỏ qua hàng trống giữ chỗ IsNewRow do DataGridView tự tạo.
+- Chọn tệp Excel mới thành công sẽ xóa lựa chọn sheet cũ; đọc lỗi sẽ giữ
+  workbook cũ. Cần chọn sheet của tệp mới trước khi lưu.
+- Lỗi xuất file được thông báo, không để exception thoát khỏi event handler.
+- Các lỗi bị nuốt ở một số form được ghi log, giữ đường đi xử lý hiện tại.
+- Không sửa file Designer, bố cục giao diện, resx hoặc cấu trúc solution.
 
-5. Kiểm tra trên máy sử dụng
-- Rebuild Solution, đăng nhập và mở các màn hình thường dùng.
-- Kiểm tra nhập/xuất, thêm/sửa/xóa, thống kê và xuất Excel với dữ liệu thử.
-- Chọn thư mục sao lưu có quyền ghi đối với dịch vụ SQL Server.
-- Thử sao lưu thành công và trường hợp đường dẫn không hợp lệ;
-  kiểm tra thông báo, file .BAK và trạng thái nút sau khi hoàn tất.
+5. GIỚI HẠN KIỂM TRA
+- Đã phân tích cú pháp C# và kiểm tra các mục khai báo trong csproj.
+- Đã đối chiếu câu SQL ở DAO, thứ tự lời gọi DAO trong hàm nghiệp vụ,
+  ngưỡng quyền, tài nguyên và Designer với bản trước.
+- CHƯA build hoặc chạy thử ứng dụng do môi trường xử lý không có bộ
+  công cụ Windows/.NET Framework/DevExpress phù hợp.
+- CHƯA kiểm thử kết nối SQL Server hoặc dữ liệu nghiệp vụ thực tế.
 
-CHI TIẾT FILE ĐÃ CHỈNH
-- Tooling WH Sytems/frmEmployessCode.cs
-- Tooling WH Sytems/frmInvenSpecPart.cs
-- Tooling WH Sytems/frmErrorList.cs
-- Tooling WH Sytems/frmWaitForm.cs
-- Tooling WH Sytems/frmLogin.cs
-- Tooling WH Sytems/frmInventory.cs
-- Tooling WH Sytems/frmMain.cs
-- DAO/BackupDAO.cs
-- DAO/DataProvider.cs
-- Tooling WH Sytems/Output/frmOutput.cs
-- Tooling WH Sytems/Output/frmReasonError.cs
-- Tooling WH Sytems/Output/frmStatisticOutput.cs
-- Tooling WH Sytems/Output/frmOutputLocal.cs
-- Tooling WH Sytems/Supplier/frmFormSupplier.cs
-- Tooling WH Sytems/Supplier/frmSupplier.cs
-- Tooling WH Sytems/Supplier/frmImportSupplier.cs
-- Tooling WH Sytems/Part/frmFormPart.cs
-- Tooling WH Sytems/Part/frmImportPart.cs
-- Tooling WH Sytems/Part/frmPart.cs
-- Tooling WH Sytems/Permission/frmPermission.cs
-- Tooling WH Sytems/Employess/frmImportEmployess.cs
-- Tooling WH Sytems/Employess/frmEmployess.cs
-- Tooling WH Sytems/Employess/frmFormEmployess.cs
-- Tooling WH Sytems/Order/frmNewOrderDetail.cs
-- Tooling WH Sytems/Order/frmOrderDetail.cs
-- Tooling WH Sytems/Order/frmNewOrder.cs
-- Tooling WH Sytems/Order/frmTheFirtOrderDetail.cs
-- Tooling WH Sytems/Order/frmOrderDetailLocal.cs
-- Tooling WH Sytems/Order/frmViewNewOrderDetail.cs
-- Tooling WH Sytems/Order/frmNewInportOrder.cs
-- Tooling WH Sytems/Order/frmOrderList.cs
-- Tooling WH Sytems/Order/frmViewOrderDetail.cs
-- Tooling WH Sytems/Order/frmInputOrderDetail.cs
-- Tooling WH Sytems/Report/rpOrderdetail.cs
-- Tooling WH Sytems/Backup/frmBackup.cs
-- Tooling WH Sytems/Input/frmInputSpecPart.cs
-- Tooling WH Sytems/Input/frmFormInput.cs
-- Tooling WH Sytems/Input/frmInputExcel.cs
-- Tooling WH Sytems/Input/frmStatisticInput.cs
-- Tooling WH Sytems/Input/frmInputLocal.cs
-- Tooling WH Sytems/Input/frmInput.cs
-- Tooling WH Sytems/User/frmUserDetail.cs
-- Tooling WH Sytems/User/frmUsers.cs
-- Tooling WH Sytems/User/frmUserGroup.cs
-- Tooling WH Sytems/DataSource/frmPurPose.cs
-- Tooling WH Sytems/DataSource/frmReason.cs
+6. KIỂM TRA SAU KHI REBUILD
+- Đăng nhập bằng các mức quyền hiện có, mở form chính và form chi tiết.
+- Thử thêm/sửa/xóa; nhập kho/xuất kho; xác nhận đơn với dữ liệu thử.
+- So sánh tồn kho và trạng thái cảnh báo với bản đang dùng.
+- Làm mới tồn kho nhiều lần; kiểm tra dữ liệu sau khi tác vụ hoàn tất.
+- Nhập Excel hợp lệ, sai cột, sai số lượng, tệp lỗi và trường hợp đổi tệp.
+- Xuất XLS/XLSX/PDF/RTF/HTML theo danh sách định dạng mỗi màn hình.
+- Thử sao lưu thành công/thất bại và kiểm tra trạng thái nút sau khi xong.
